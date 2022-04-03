@@ -47,7 +47,7 @@ app.get('/', async (req, res) => {
 		// Wait to ensure the container is started
 		setTimeout(() => {
 			res.redirect(termUrl);
-		}, 500);
+		}, parseInt(process.env.TERM_STARTUP_DELAY) ?? 1000);
 	} catch (e) {
 		console.error(e);
 	}
