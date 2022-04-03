@@ -31,6 +31,9 @@ app.get('/', async (req, res) => {
 			StdinOnce: false,
 			name: `term-host-${hostId}`,
 			Hostname: hostId,
+			Env: [
+				`TERM_HOST_ID=${hostId}`
+			],
 			Labels: {
 				'traefik.enable': 'true',
 				[`traefik.http.routers.${hostId}.entrypoints`]: process.env.TRAEFIK_ENTRYPOINT ?? 'web',
@@ -44,7 +47,7 @@ app.get('/', async (req, res) => {
 		// Wait to ensure the container is started
 		setTimeout(() => {
 			res.redirect(termUrl);
-		}, 2500);
+		}, 500);
 	} catch (e) {
 		console.error(e);
 	}
