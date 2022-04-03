@@ -34,7 +34,7 @@ app.get('/', async (req, res) => {
 			Labels: {
 				'traefik.enable': 'true',
 				[`traefik.http.routers.${hostId}.entrypoints`]: process.env.TRAEFIK_ENTRYPOINT ?? 'web',
-				[`traefik.http.routers.${hostId}.rule`]: `Host(\`${termDomain}\`) && PathPrefix(\`/${hostId}/\`)`
+				[`traefik.http.routers.${hostId}.rule`]: `Host(\`${termDomain}\`) && PathPrefix(\`/${hostId}\`)`
 			},
 			NetworkMode: process.env.TRAEFIK_NETWORK ?? 'traefik'
 		});
