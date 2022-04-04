@@ -39,9 +39,6 @@ async function createContainer() {
 
 		await container.start();
 
-		// Wait to ensure the container is started
-		await new Promise(resolve => setTimeout(() => resolve(), parseInt(process.env.TERM_STARTUP_DELAY) ?? 1000));
-
 		return hostId;
 	} catch (e) {
 		console.error(e);
