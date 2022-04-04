@@ -1,56 +1,23 @@
 const express = require('express');
+const { createServer } = require('http');
+const path = require('path');
+const { Server } = require('socket.io');
+const { termBaseUrl } = require('./config');
+const { createContainer } = require('./container');
+
 const app = express();
-const axios = require('axios');
-const Docker = require('dockerode');
-const docker = new Docker();
+const server = createServer(app);
+const io = new Server(server);
 
-const termDomain = process.env.TERM_DOMAIN ?? 'localhost';
-const termBaseUrl = process.env.TERM_BASE_URL ?? 'http://localhost:3001';
+app.use('/public', express.static(path.join(__dirname, '../public')));
 
-async function getHostId() {
-	let { data } = await axios.get(process.env.NAME_URL ?? 'https://name-generator.exo.heka.no/project');
-	console.log(data);
-	return data;
-}
+app.get('/', async (req, res) => res.sendFile(path.join(__dirname, '../public/index.html')));
 
-app.get('/', async (req, res) => {
-	try {
+io.on('connection', async socket => {
+	const hostId = await createContainer();
+	let termUrl = `${termBaseUrl}/${hostId}`;
 
-		// TODO: Create new term-host
-		let hostId = await getHostId();
-
-		let termUrl = `${termBaseUrl}/${hostId}`;
-
-		const container = await docker.createContainer({
-			Image: process.env.TERM_DOCKER_IMAGE ?? 'term-host',
-			AttachStdin: false,
-			AttachStdout: false,
-			AttachStderr: false,
-			Tty: false,
-			OpenStdin: false,
-			StdinOnce: false,
-			name: `term-host-${hostId}`,
-			Hostname: hostId,
-			Env: [
-				`TERM_HOST_ID=${hostId}`
-			],
-			Labels: {
-				'traefik.enable': 'true',
-				[`traefik.http.routers.${hostId}.entrypoints`]: process.env.TRAEFIK_ENTRYPOINT ?? 'web',
-				[`traefik.http.routers.${hostId}.rule`]: `Host(\`${termDomain}\`) && PathPrefix(\`/${hostId}\`)`
-			},
-			NetworkMode: process.env.TRAEFIK_NETWORK ?? 'traefik'
-		});
-
-		await container.start();
-
-		// Wait to ensure the container is started
-		setTimeout(() => {
-			res.redirect(termUrl);
-		}, parseInt(process.env.TERM_STARTUP_DELAY) ?? 1000);
-	} catch (e) {
-		console.error(e);
-	}
+	socket.emit('redirect', { to: termUrl });
 });
 
-app.listen(3000);
+server.listen(3000, '0.0.0.0');
