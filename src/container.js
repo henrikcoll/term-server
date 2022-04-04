@@ -16,6 +16,8 @@ async function createContainer() {
 		// TODO: Create new term-host
 		let hostId = await getHostId();
 
+		await docker.pull(process.env.TERM_DOCKER_IMAGE ?? 'term-host');
+
 		const container = await docker.createContainer({
 			Image: process.env.TERM_DOCKER_IMAGE ?? 'term-host',
 			AttachStdin: false,
